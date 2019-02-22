@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Agora Signal Demo</title>
+        <meta charset="utf-8">
+        <script src="common/AgoraSig-1.4.0.js"></script>
+        <script src="common/app_id.js"></script>
+        <script src="common/vendor/jquery.js"></script>
+    </head>
+    <body>
+    <table>
+        <tr>    
+            <td>Login ID</td>
+            <td> <input id="loginAccount" value="" size="30"> </td>
+            <td> <button id="btnLogin">login</button> </td>
+        </tr>
+        <tr>
+            <td colspan="3"><textarea id="chatBox" rows="4" cols="40"></textarea></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input id="message" value="" size="40"> </td>
+            <td> <button id="btnSendMessage" disabled>send message</button> </td>            
+        </tr>
+    </table>
+
+    <script language="javascript">
+        var channelName = 'signalDemo011';
+
+        var signal = Signal(app_id);
+        var session, channel;
+
+        function addMessage(account,text){
+            var currentText = $('#chatBox').val();
+            $('#chatBox').val(currentText + account + ":" + text + "\n");
+        }
+        
+        $('#btnLogin').on("click", function(){
+            $('#btnLogin').prop("disabled",true);            
+            session = signal.login($('#loginAccount').val(),"_no_need_token");
+
+            session.onLoginSuccess = function(uid){
+                console.log('login success ' + uid);
+                $('#btnSendMessage').prop("disabled",false);
+                channel = session.channelJoin(channelName);
+                channel.onMessageChannelReceive = function(account, uid, msg){
+                    addMessage(account,msg);
+                }
+            };
+
+            session.onLoginFailed = function(ecode){
+                console.log('login failed ' + ecode);
+            };
+
+            session.onError = function(evt){
+                console.log("onError");
+            }
+        });
+
+        $('#btnSendMessage').on("click", function(){
+            if($('#message').val()){
+                channel.messageChannelSend($('#message').val(),function(){});
+                $('#message').val("");
+            }
+        });
+    </script>
+  </body>
+</html>
